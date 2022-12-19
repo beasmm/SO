@@ -28,7 +28,6 @@ tfs_params tfs_default_params() {
 }
 
 int tfs_init(tfs_params const *params_ptr) {
-    state_init();
     tfs_params params;
     if (params_ptr != NULL) {
         params = *params_ptr;
@@ -160,7 +159,7 @@ int tfs_link(char const *target, char const *link_name) {
         return -1;
     }
 
-    add_dir_entry(root_dir_inode, name + 1, inum) == -1
+    add_dir_entry(root_dir_inode, target + 1, inum);
 
 
 
