@@ -276,11 +276,41 @@ ssize_t tfs_read(int fhandle, void *buffer, size_t len) {
 }
 
 int tfs_unlink(char const *target) {
-    (void)target;
-    // ^ this is a trick to keep the compiler from complaining about unused
-    // variables. TODO: remove
 
-    PANIC("TODO: tfs_unlink");
+    inode_t *root_dir_inode = inode_get(ROOT_DIR_INUM);
+
+    int inum = tfs_lookup(target, inode_get(ROOT_DIR_INUM));
+    if (inum < 0) {
+        return -1;
+    }
+
+    inode_t* inode =  inode_get(inum);
+    inode_type type = inode->i_node_type;
+
+    if(type == T_FILE){
+        int hard_number = inode->i_hard_link_n;
+
+
+
+
+
+
+
+        
+
+
+    }
+
+
+
+
+
+
+
+
+
+
+
 }
 
 int tfs_copy_from_external_fs(char const *source_path, char const *dest_path) {
