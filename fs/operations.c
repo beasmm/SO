@@ -160,10 +160,8 @@ int tfs_link(char const *target, char const *link_name) {
     }
 
     add_dir_entry(root_dir_inode, target + 1, inum);
-
-
-
-
+    inode_get(inum)->i_hard_link_n++;
+    return 0;
 }
 
 int tfs_close(int fhandle) {
