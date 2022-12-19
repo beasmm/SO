@@ -1,6 +1,8 @@
 #include "operations.h"
 #include "config.h"
 #include "state.h"
+
+#include <pthread.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,6 +13,9 @@
 #include <fcntl.h>
 
 #include "betterassert.h"
+
+static pthread_mutex_t tfs_open_mutex;
+bool block_open_new_files;
 
 tfs_params tfs_default_params() {
     tfs_params params = {
@@ -23,6 +28,7 @@ tfs_params tfs_default_params() {
 }
 
 int tfs_init(tfs_params const *params_ptr) {
+    state_init();
     tfs_params params;
     if (params_ptr != NULL) {
         params = *params_ptr;
