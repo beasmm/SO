@@ -241,6 +241,7 @@ int inode_create(inode_type i_type) {
         inode_table[inumber].i_size = 0;
         inode_table[inumber].i_data_block = -1;
         inode_table[inumber].i_hard_link_n = 0;
+        break;
     default:
         PANIC("inode_create: unknown file type");
     }

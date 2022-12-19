@@ -5,7 +5,6 @@
 #define ROOT_DIR_INUM (0)
 
 #define MAX_FILE_NAME (40)
-#define BLOCK_SIZE (1024)
 #define DELAY (5000)
 
 #endif // CONFIG_H

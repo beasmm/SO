@@ -14,8 +14,6 @@
 
 #include "betterassert.h"
 
-static pthread_mutex_t tfs_open_mutex;
-bool block_open_new_files;
 
 tfs_params tfs_default_params() {
     tfs_params params = {
@@ -100,6 +98,16 @@ int tfs_open(char const *name, tfs_file_mode_t mode) {
         ALWAYS_ASSERT(inode != NULL,
                       "tfs_open: directory files must have an inode");
 
+        while (inode->i_node_type == T_SYMLINK){
+            inum = tfs_lookup((char*)data_block_get(inode->i_data_block), root_dir_inode);
+            if (inum < 0) {
+                fprintf(stderr, "tfs_open: tfs_lookup failed\n");
+                return -1;
+            }
+            inode = inode_get(inum);
+        }
+        
+        
         // Truncate (if requested)
         if (mode & TFS_O_TRUNC) {
             if (inode->i_size > 0) {
@@ -145,16 +153,29 @@ int tfs_sym_link(char const *target, char const *link_name) {
     
     inode_t *root_dir_inode = inode_get(ROOT_DIR_INUM);
 
-    int inum = inode_create(T_SYMLINK);
-    if (inum < 0) {
+
+    int fhandle = tfs_open(link_name, TFS_O_CREAT);
+    if (fhandle == -1) {
         return -1;
     }
+    int inum = tfs_lookup(link_name, root_dir_inode);
+    if (inum < 0) {
+        fprintf(stderr, "tfs_sym_link: tfs_lookup failed\n");
+        return -1;
+    }
+    inode_t *inode = inode_get(inum);
 
-    add_dir_entry(root_dir_inode, link_name + 1, inum);
-    int fhandle = tfs_open(link_name, TFS_O_CREAT);
+    inode->i_node_type = T_SYMLINK;
+    inode->i_data_block= data_block_alloc();
+    void *link_data = data_block_get(inode->i_data_block);
+    memcpy(link_data, target, state_block_size());
+    inode->i_size = state_block_size();
+    
+
     tfs_write(fhandle, target, strlen(target));
     tfs_close(fhandle);
-
+    
+    return 0;
 }
 
 int tfs_link(char const *target, char const *link_name) {
