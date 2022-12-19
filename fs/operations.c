@@ -152,12 +152,19 @@ int tfs_sym_link(char const *target, char const *link_name) {
 }
 
 int tfs_link(char const *target, char const *link_name) {
-    (void)target;
-    (void)link_name;
-    // ^ this is a trick to keep the compiler from complaining about unused
-    // variables. TODO: remove
+    
+    inode_t *root_dir_inode = inode_get(ROOT_DIR_INUM);
 
-    PANIC("TODO: tfs_link");
+    int inum = tfs_lookup(target, inode_get(ROOT_DIR_INUM));
+    if (inum < 0) {
+        return -1;
+    }
+
+    add_dir_entry(root_dir_inode, name + 1, inum) == -1
+
+
+
+
 }
 
 int tfs_close(int fhandle) {
@@ -258,35 +265,32 @@ int tfs_copy_from_external_fs(char const *source_path, char const *dest_path) {
         return -1;
     }   
 
-    FILE *source_file = fopen(source_path, 0);
-    if (source_file == NULL){
+    int source_file = open(source_path, O_RDONLY);
+    if (source_file < 0){ 
         return -1;
     }
 
-    char buffer[BLOCK_SIZE];
+    char buffer[128];
     memset(buffer, 0, sizeof(buffer));
+    long bytes_read; 
     
-    
-    size_t bytes_read; 
-    while((bytes_read = fread(buffer, sizeof(char ), bytes_read, source_file)) > 0){
-        if(tfs_write(dest_file, buffer, BLOCK_SIZE) != bytes_read){
-            fclose(source_file);
+    while((bytes_read = read(source_file, buffer, sizeof(buffer))) > 0){
+        if(bytes_read < 0){
+            return -1;
+        }
+        if(tfs_write(dest_file, buffer, (size_t)bytes_read) == -1){
+            close(source_file);
             tfs_close(dest_file);
             return -1;  
         }
     }
 
-    if(fclose(source_file) != 0){
+    if(close(source_file) != 0){
         tfs_close(dest_file);
         return -1;
     }
     if (tfs_close(dest_file) != 0) {
         return -1;
     }
-    if(bytes_read < 0){
-        return -1;
-    }
     return 0;
-
-    /* alo alaoalaoaaoalaoalaodmaeçldna */
 }
