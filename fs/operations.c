@@ -186,6 +186,10 @@ int tfs_link(char const *target, char const *link_name) {
     if (inum < 0) {
         return -1;
     }
+    inode_t *inode = inode_get(inum);
+    if(inode->i_node_type == T_SYMLINK){
+        return -1;
+    }
 
     add_dir_entry(root_dir_inode, link_name + 1, inum);
     inode_get(inum)->i_hard_link_n++;
@@ -288,12 +292,13 @@ int tfs_unlink(char const *target) {
     inode_type type = inode->i_node_type;
 
     if(type == T_FILE){
-        int hard_number = inode->i_hard_link_n;
+        
 
         clear_dir_entry(inode, target);
-        hard_number--;
+        inode_get(inum)->i_hard_link_n--;
 
-        if(hard_number == 0){
+
+        if(inode->i_hard_link_n == 0){
             data_block_free(inode->i_data_block);
             inode_delete(inum);
         }
