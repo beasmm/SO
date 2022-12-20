@@ -276,10 +276,10 @@ ssize_t tfs_read(int fhandle, void *buffer, size_t len) {
 }
 
 int tfs_unlink(char const *target) {
-
+    
     inode_t *root_dir_inode = inode_get(ROOT_DIR_INUM);
 
-    int inum = tfs_lookup(target, inode_get(ROOT_DIR_INUM));
+    int inum = tfs_lookup(target, root_dir_inode);
     if (inum < 0) {
         return -1;
     }
@@ -290,27 +290,20 @@ int tfs_unlink(char const *target) {
     if(type == T_FILE){
         int hard_number = inode->i_hard_link_n;
 
+        clear_dir_entry(inode, target);
+        hard_number--;
 
-
-
-
-
-
-        
-
-
+        if(hard_number == 0){
+            data_block_free(inode->i_data_block);
+            inode_delete(inum);
+        }
     }
-
-
-
-
-
-
-
-
-
-
-
+    else if(type == T_SYMLINK){
+        clear_dir_entry(inode, target);
+        data_block_free(inode->i_data_block);
+        inode_delete(inum);
+    }
+    return 0;
 }
 
 int tfs_copy_from_external_fs(char const *source_path, char const *dest_path) {
